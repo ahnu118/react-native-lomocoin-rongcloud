@@ -27,9 +27,14 @@ const subscription = RongCloudIMLibEmitter.addListener(
 
 
 const ConversationType = {
-    PRIVATE: 'PRIVATE',
-    DISCUSSION: 'DISCUSSION',
-    SYSTEM: 'SYSTEM'
+    PRIVATE: 1,
+    DISCUSSION: 2,
+    GROUP: 3,
+    CHATROOM: 4,
+    CUSTOMER_SERVICE: 5,
+    SYSTEM: 6,
+    APP_PUBLIC_SERVICE: 7,
+    PUBLIC_SERVICE: 8
 };
 
 export default {
