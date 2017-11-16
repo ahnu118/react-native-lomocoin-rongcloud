@@ -34,7 +34,8 @@ const ConversationType = {
     CUSTOMER_SERVICE: 5,
     SYSTEM: 6,
     APP_PUBLIC_SERVICE: 7,
-    PUBLIC_SERVICE: 8
+    PUBLIC_SERVICE: 8,
+    PUSHSERVICE: 9
 };
 
 export default {
@@ -51,20 +52,65 @@ export default {
     clearUnreadMessage(conversationType, targetId){
         return RongCloudIMLib.clearUnreadMessage(conversationType, targetId);
     },
+    clearMessages(conversationType, targetId){//删除某个会话中的所有消息
+        return RongCloudIMLib.clearMessages(conversationType, targetId);
+    },
+    removeConversation(conversationType, targetId){//此方法会从本地存储中删除该会话，但是不会删除会话中的消息。
+        return RongCloudIMLib.removeConversation(conversationType, targetId);
+    },
+    setConversationToTop(conversationType, targetId, isTop){//设置会话的置顶状态
+        return RongCloudIMLib.setConversationToTop(conversationType, targetId, isTop);
+    },
+    sendReadReceiptMessage(conversationType, targetId, timestamp){//发送某个会话中消息阅读的回执
+        return RongCloudIMLib.sendReadReceiptMessage(conversationType, targetId, timestamp);
+    },
+    getUnreadCount(conversationType, targetId){//获取未读消息数
+        return RongCloudIMLib.getUnreadCount(conversationType, targetId);
+    },
+    getUnreadCount(types){
+        return RongCloudIMLib.getUnreadCount(types);
+    },
+    createDiscussion(name, userIdList){//创建讨论组 name群名
+        return RongCloudIMLib.createDiscussion(name, userIdList);
+    },
+    addMemberToDiscussion(discussionId, userIdList){//讨论组加人，将用户加入讨论组
+        return RongCloudIMLib.addMemberToDiscussion(discussionId, userIdList);
+    },
+    removeMemberFromDiscussion(discussionId,userId){//讨论组踢人，将用户移出讨论组
+        return RongCloudIMLib.removeMemberFromDiscussion(discussionId,userId);
+    },
+    quitDiscussion(discussionId){//退出当前讨论组
+        return RongCloudIMLib.quitDiscussion(discussionId);
+    },
+    getDiscussion(discussionId){//获取讨论组的信息
+        return RongCloudIMLib.quitDiscussion(discussionId);
+    },
+    setDiscussionName(discussionId, discussionName){//设置讨论组名称
+        return RongCloudIMLib.setDiscussionName(discussionId, discussionName);
+    },
+    setDiscussionInviteStatus(discussionId, isOpen){//设置讨论组是否开放加人权限
+        return RongCloudIMLib.setDiscussionInviteStatus(discussionId, isOpen);
+    },
     searchConversations(keyword) {
         return RongCloudIMLib.searchConversations(keyword);
     },
-    getConversationList() {
+    getConversationList() {//获取本地存储的会话列表
         return RongCloudIMLib.getConversationList();
+    },
+    getConversation(conversationType, targetId) {//获取单个会话数据
+        return RongCloudIMLib.getConversationList(conversationType, targetId);
     },
     getLatestMessages(type, targetId, count) {
         return RongCloudIMLib.getLatestMessages(type, targetId, count);
     },
-    sendTextMessage(conversationType, targetId, content) {
-        return RongCloudIMLib.sendTextMessage(conversationType, targetId, content, content);
+    getHistoryMessages(conversationType,targetId,objectName,oldestMessageId,count){//获取会话中，从指定消息之前、指定数量的、指定消息类型的最新消息实体
+        return RongCloudIMLib.getHistoryMessages(conversationType,targetId,objectName,oldestMessageId,count);
     },
-    sendImageMessage(conversationType, targetId, imageUrl) {
-        return RongCloudIMLib.sendImageMessage(conversationType, targetId, imageUrl, '');
+    sendTextMessage(conversationType, targetId, targetName, content) {
+        return RongCloudIMLib.sendTextMessage(conversationType, targetId, targetName, content, content);
+    },
+    sendImageMessage(conversationType, targetId, targetName, imageUrl) {
+        return RongCloudIMLib.sendImageMessage(conversationType, targetId, targetName, imageUrl, '');
     },
     voiceBtnPressIn(conversationType, targetId) {
         return RongCloudIMLib.voiceBtnPressIn(conversationType, targetId);

@@ -133,7 +133,351 @@ RCT_EXPORT_METHOD(clearUnreadMessage:(int)type
     [[self getClient] clearMessagesUnreadStatus:conversationType targetId:targetId];
 }
 
+/*!
+ 删除某个会话中的所有消息
+ 
+ @param conversationType    会话类型，不支持聊天室
+ @param targetId            目标会话ID
+ @return                    是否删除成功
+ */
+RCT_EXPORT_METHOD(clearMessages:(int)type
+                  targetId:(NSString *)targetId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+   BOOL flag =  [[self getClient] clearMessages:type targetId:targetId];
+    if(flag){
+        resolve(@"删除成功");
+    }else{
+        reject(@"删除失败", @"删除失败", nil);
+    }
+}
 
+/*!
+ 从本地存储中删除会话
+ 
+ @param conversationType    会话类型
+ @param targetId            目标会话ID
+ @return                    是否删除成功
+ 
+ @discussion 此方法会从本地存储中删除该会话，但是不会删除会话中的消息。
+ */
+RCT_EXPORT_METHOD(removeConversation:(int)type
+                  targetId:(NSString *)targetId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    BOOL flag = [[self getClient] removeConversation:type targetId:targetId];
+    if(flag){
+        resolve(@"删除成功");
+    }else{
+        reject(@"删除失败", @"删除失败", nil);
+    }
+}
+
+/*!
+ 发送某个会话中消息阅读的回执
+ 
+ @param conversationType    会话类型
+ @param targetId            目标会话ID
+ @param timestamp           该会话中已阅读的最后一条消息的发送时间戳
+ 
+ @discussion 此接口目前只支持单聊, 如果使用Lib 可以注册监听 RCLibDispatchReadReceiptNotification 通知,使用kit 直接开启RCIM.h 中enableReadReceipt。
+ 
+ @warning 此接口目前仅支持单聊。
+ */
+RCT_EXPORT_METHOD(sendReadReceiptMessage:(int)type
+                  targetId:(NSString *)targetId
+                   time:(long long)timestamp) {
+    [[self getClient] sendReadReceiptMessage:type targetId:targetId time:timestamp];
+}
+
+/*!
+ 设置会话的置顶状态
+ 
+ @param conversationType    会话类型
+ @param targetId            目标会话ID
+ @param isTop               是否置顶
+ @return                    设置是否成功
+ */
+RCT_EXPORT_METHOD(setConversationToTop:(int)type
+                  targetId:(NSString *)targetId
+                   isTop:(BOOL)isTop
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    BOOL flag = [[self getClient] setConversationToTop:type targetId:targetId isTop:isTop];
+    if(flag){
+        resolve(@"置顶成功");
+    }else{
+        reject(@"置顶失败", @"置顶失败", nil);
+    }
+}
+
+
+/*!
+ 获取单个会话数据
+ 
+ @param conversationType    会话类型
+ @param targetId            目标会话ID
+ @return                    会话的对象
+ */
+RCT_EXPORT_METHOD(getConversation:(int)conversationType
+                  targetId:(NSString *)targetId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    RCConversation *conversation = [[self getClient] getConversation:conversationType targetId:targetId];
+    NSMutableDictionary * dict = [NSMutableDictionary new];
+    dict[@"conversationType"] = @((unsigned long)conversation.conversationType);
+    dict[@"targetId"] = conversation.targetId;
+    dict[@"conversationTitle"] = conversation.conversationTitle;
+    dict[@"unreadMessageCount"] = @(conversation.unreadMessageCount);
+    dict[@"receivedTime"] = @((long long)conversation.receivedTime);
+    dict[@"sentTime"] = @((long long)conversation.sentTime);
+    dict[@"senderUserId"] = conversation.senderUserId;
+    dict[@"lastestMessageId"] = @(conversation.lastestMessageId);
+    dict[@"lastestMessageDirection"] = @(conversation.lastestMessageDirection);
+    dict[@"jsonDict"] = conversation.jsonDict;
+    if ([conversation.lastestMessage isKindOfClass:[RCTextMessage class]]) {
+        RCTextMessage *textMsg = (RCTextMessage *)conversation.lastestMessage;
+        dict[@"msgType"] = @"text";
+        dict[@"lastestMessage"] = textMsg.content;
+        dict[@"extra"] = textMsg.extra;
+    } else if ([conversation.lastestMessage isKindOfClass:[RCImageMessage class]]) {
+        RCImageMessage *textMsg = (RCImageMessage *)conversation.lastestMessage;
+        dict[@"msgType"] = @"image";
+        dict[@"extra"] = textMsg.extra;
+    } else if ([conversation.lastestMessage isKindOfClass:[RCVoiceMessage class]]) {
+        RCVoiceMessage *textMsg = (RCVoiceMessage *)conversation.lastestMessage;
+        dict[@"msgType"] = @"voice";
+        dict[@"extra"] = textMsg.extra;
+    }
+    resolve(dict);
+}
+
+/*!
+ 创建讨论组
+ @param discussionId                    讨论组ID
+ @param discussionName                  讨论组名称
+ @param creatorId                       创建者的用户ID
+ @param conversationType                会话类型
+ @param memberIdList                    讨论组成员的用户ID列表
+ @param inviteStatus                    是否开放加人权限
+ @param name            讨论组名称
+ @param userIdList      用户ID的列表
+ @param successBlock    创建讨论组成功的回调 [discussion:创建成功返回的讨论组对象]
+ @param errorBlock      创建讨论组失败的回调 [status:创建失败的错误码]
+ */
+RCT_EXPORT_METHOD(createDiscussion:name
+                  userIdList:(NSArray *)userIdList
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)(RCDiscussion *discussion);
+    successBlock = ^(RCDiscussion *discussion) {
+        NSMutableDictionary * dict = [NSMutableDictionary new];
+        dict[@"discussionId"] = discussion.discussionId;
+        dict[@"discussionName"] = discussion.discussionName;
+        dict[@"creatorId"] = discussion.creatorId;
+        dict[@"memberIdList"] = discussion.memberIdList;
+        dict[@"inviteStatus"] = @((int)discussion.inviteStatus);
+        resolve(dict);
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] createDiscussion:name userIdList:userIdList success:successBlock error:errorBlock];
+}
+
+/*!
+ 讨论组加人，将用户加入讨论组
+ 
+ @param discussionId    讨论组ID
+ @param userIdList      需要加入的用户ID列表
+ @param successBlock    讨论组加人成功的回调 [discussion:讨论组加人成功返回的讨论组对象]
+ @param errorBlock      讨论组加人失败的回调 [status:讨论组加人失败的错误码]
+ 
+ @discussion 设置的讨论组名称长度不能超过40个字符，否则将会截断为前40个字符。
+ */
+RCT_EXPORT_METHOD(addMemberToDiscussion:discussionId
+                  userIdList:(NSArray *)userIdList
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)(RCDiscussion *discussion);
+    successBlock = ^(RCDiscussion *discussion) {
+        NSMutableDictionary * dict = [NSMutableDictionary new];
+        dict[@"discussionId"] = discussion.discussionId;
+        dict[@"discussionName"] = discussion.discussionName;
+        dict[@"creatorId"] = discussion.creatorId;
+        dict[@"memberIdList"] = discussion.memberIdList;
+        dict[@"inviteStatus"] = @((int)discussion.inviteStatus);
+        resolve(dict);
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] addMemberToDiscussion:discussionId userIdList:userIdList success:successBlock error:errorBlock];
+}
+
+/*!
+ 讨论组踢人，将用户移出讨论组
+ 
+ @param discussionId    讨论组ID
+ @param userId          需要移出的用户ID
+ @param successBlock    讨论组踢人成功的回调 [discussion:讨论组踢人成功返回的讨论组对象]
+ @param errorBlock      讨论组踢人失败的回调 [status:讨论组踢人失败的错误码]
+ 
+ @discussion 如果当前登陆用户不是此讨论组的创建者并且此讨论组没有开放加人权限，则会返回错误。
+ 
+ @warning 不能使用此接口将自己移除，否则会返回错误。
+ 如果您需要退出该讨论组，可以使用-quitDiscussion:success:error:方法。
+ */
+RCT_EXPORT_METHOD(removeMemberFromDiscussion:discussionId
+                  userId:(NSString *)userId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)(RCDiscussion *discussion);
+    successBlock = ^(RCDiscussion *discussion) {
+        NSMutableDictionary * dict = [NSMutableDictionary new];
+        dict[@"discussionId"] = discussion.discussionId;
+        dict[@"discussionName"] = discussion.discussionName;
+        dict[@"creatorId"] = discussion.creatorId;
+        dict[@"memberIdList"] = discussion.memberIdList;
+        dict[@"inviteStatus"] = @((int)discussion.inviteStatus);
+        resolve(dict);
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] removeMemberFromDiscussion:discussionId userId:userId success:successBlock error:errorBlock];
+}
+
+
+/*!
+ 退出当前讨论组
+ 
+ @param discussionId    讨论组ID
+ @param successBlock    退出成功的回调 [discussion:退出成功返回的讨论组对象]
+ @param errorBlock      退出失败的回调 [status:退出失败的错误码]
+ */
+RCT_EXPORT_METHOD(quitDiscussion:discussionId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)(RCDiscussion *discussion);
+    successBlock = ^(RCDiscussion *discussion) {
+        NSMutableDictionary * dict = [NSMutableDictionary new];
+        dict[@"discussionId"] = discussion.discussionId;
+        dict[@"discussionName"] = discussion.discussionName;
+        dict[@"creatorId"] = discussion.creatorId;
+        dict[@"memberIdList"] = discussion.memberIdList;
+        dict[@"inviteStatus"] = @((int)discussion.inviteStatus);
+        resolve(dict);
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] quitDiscussion:discussionId success:successBlock error:errorBlock];
+}
+
+/*!
+ 获取讨论组的信息
+ 
+ @param discussionId    需要获取信息的讨论组ID
+ @param successBlock    获取讨论组信息成功的回调 [discussion:获取的讨论组信息]
+ @param errorBlock      获取讨论组信息失败的回调 [status:获取讨论组信息失败的错误码]
+ */
+RCT_EXPORT_METHOD(getDiscussion:discussionId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)(RCDiscussion *discussion);
+    successBlock = ^(RCDiscussion *discussion) {
+        NSMutableDictionary * dict = [NSMutableDictionary new];
+        dict[@"discussionId"] = discussion.discussionId;
+        dict[@"discussionName"] = discussion.discussionName;
+        dict[@"creatorId"] = discussion.creatorId;
+        dict[@"memberIdList"] = discussion.memberIdList;
+        dict[@"inviteStatus"] = @((int)discussion.inviteStatus);
+        resolve(dict);
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] getDiscussion:discussionId success:successBlock error:errorBlock];
+}
+
+/*!
+ 设置讨论组名称
+ 
+ @param targetId                需要设置的讨论组ID
+ @param discussionName          需要设置的讨论组名称，discussionName长度<=40
+ @param successBlock            设置成功的回调
+ @param errorBlock              设置失败的回调 [status:设置失败的错误码]
+ 
+ @discussion 设置的讨论组名称长度不能超过40个字符，否则将会截断为前40个字符。
+ */
+RCT_EXPORT_METHOD(setDiscussionName:discussionId
+                  name:(NSString *)discussionName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)(RCDiscussion *discussion);
+    successBlock = ^(RCDiscussion *discussion) {
+        NSMutableDictionary * dict = [NSMutableDictionary new];
+        dict[@"discussionId"] = discussion.discussionId;
+        dict[@"discussionName"] = discussion.discussionName;
+        dict[@"creatorId"] = discussion.creatorId;
+        dict[@"memberIdList"] = discussion.memberIdList;
+        dict[@"inviteStatus"] = @((int)discussion.inviteStatus);
+        resolve(dict);
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] setDiscussionName:discussionId name:discussionName success:successBlock error:errorBlock];
+}
+
+/*!
+ 设置讨论组是否开放加人权限
+ 
+ @param targetId        讨论组ID
+ @param isOpen          是否开放加人权限
+ @param successBlock    设置成功的回调
+ @param errorBlock      设置失败的回调[status:设置失败的错误码]
+ 
+ @discussion 讨论组默认开放加人权限，即所有成员都可以加人。
+ 如果关闭加人权限之后，只有讨论组的创建者有加人权限。
+ */
+RCT_EXPORT_METHOD(setDiscussionInviteStatus:discussionId
+                  isOpen:(BOOL)isOpen
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    void (^successBlock)();
+    successBlock = ^() {
+        resolve(@"权限开启");
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] setDiscussionInviteStatus:discussionId isOpen:isOpen success:successBlock error:errorBlock];
+}
+
+//获取本地存储的会话列表
 RCT_REMAP_METHOD(getConversationList,
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject) {
@@ -157,10 +501,15 @@ RCT_REMAP_METHOD(getConversationList,
                 RCTextMessage *textMsg = (RCTextMessage *)conversation.lastestMessage;
                 dict[@"msgType"] = @"text";
                 dict[@"lastestMessage"] = textMsg.content;
+                dict[@"extra"] = textMsg.extra;
             } else if ([conversation.lastestMessage isKindOfClass:[RCImageMessage class]]) {
+                RCImageMessage *textMsg = (RCImageMessage *)conversation.lastestMessage;
                 dict[@"msgType"] = @"image";
+                dict[@"extra"] = textMsg.extra;
             } else if ([conversation.lastestMessage isKindOfClass:[RCVoiceMessage class]]) {
+                RCVoiceMessage *textMsg = (RCVoiceMessage *)conversation.lastestMessage;
                 dict[@"msgType"] = @"voice";
+                dict[@"extra"] = textMsg.extra;
             }
             
             [array addObject:dict];
@@ -308,19 +657,127 @@ RCT_REMAP_METHOD(searchConversations,
 
 RCT_EXPORT_METHOD(sendTextMessage:(int)type
                   targetId:(NSString *)targetId
+                  targetName:(NSString *)targetName
                   content:(NSString *)content
                   pushContent:(NSString *) pushContent
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
     
     RCTextMessage *messageContent = [RCTextMessage messageWithContent:content];
+    messageContent.extra=targetName;
     [self sendMessage:type messageType:@"text" targetId:targetId content:messageContent pushContent:pushContent resolve:resolve reject:reject];
     
     
 }
 
+/*!
+ 获取会话中，从指定消息之前、指定数量的、指定消息类型的最新消息实体
+ 
+ @param conversationType    会话类型
+ @param targetId            目标会话ID
+ @param objectName          消息内容的类型名
+ @param oldestMessageId     截止的消息ID
+ @param count               需要获取的消息数量
+ @return                    消息实体RCMessage对象列表
+ 
+ @discussion 此方法会获取该会话中，oldestMessageId之前的、指定数量和消息类型的最新消息实体，返回的消息实体按照时间从新到旧排列。
+ 返回的消息中不包含oldestMessageId对应的那条消息，如果会话中的消息数量小于参数count的值，会将该会话中的所有消息返回。
+ 如：
+ oldestMessageId为10，count为2，会返回messageId为9和8的RCMessage对象列表。
+ */
+
+RCT_EXPORT_METHOD(getHistoryMessages:(int)conversationType
+                  targetId:(NSString *)targetId
+                  objectName:(NSString *)objectName
+                  oldestMessageId:(long)oldestMessageId
+                  count:(int)count
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject
+                  ){
+    NSArray *messageList = [[NSArray alloc] init];
+    if([objectName isEqualToString:@""]){
+        messageList=  [[self getClient] getHistoryMessages:conversationType targetId:targetId oldestMessageId:oldestMessageId count:count];
+    }else{
+        messageList=  [[self getClient] getHistoryMessages:conversationType targetId:targetId objectName:objectName oldestMessageId:oldestMessageId count:count];
+    }
+    if(messageList){
+        NSMutableArray * array = [NSMutableArray new];
+        for (RCMessage * message in messageList) {
+            NSMutableDictionary * dict = [NSMutableDictionary new];
+            dict[@"conversationType"] = @((unsigned long)message.conversationType);
+            dict[@"targetId"] = message.targetId;
+            dict[@"messageId"] = @(message.messageId);
+            dict[@"receivedTime"] = @((long long)message.receivedTime);
+            dict[@"sentTime"] = @((long long)message.sentTime);
+            dict[@"senderUserId"] = message.senderUserId;
+            dict[@"messageUId"] = message.messageUId;
+            dict[@"messageDirection"] = @(message.messageDirection);
+            
+            if([message.content isKindOfClass:[RCTextMessage class]]){
+                RCTextMessage *textMsg = (RCTextMessage *)message.content;
+                dict[@"type"] = @"text";
+                dict[@"content"] = textMsg.content;
+                dict[@"extra"] = textMsg.extra;
+            }
+            else if ([message.content isKindOfClass:[RCImageMessage class]]){
+                RCImageMessage *imageMsg = (RCImageMessage *)message.content;
+                dict[@"type"] = @"image";
+                dict[@"imageUrl"] = imageMsg.imageUrl;
+                dict[@"extra"] = imageMsg.extra;
+            }
+            else if ([message.content isKindOfClass:[RCVoiceMessage class]]){
+                RCVoiceMessage *voiceMsg = (RCVoiceMessage *)message.content;
+                dict[@"type"] = @"voice";
+                dict[@"wavAudioData"] = [self saveWavAudioDataToSandbox:voiceMsg.wavAudioData messageId:message.messageId];
+                dict[@"duration"] = @(voiceMsg.duration);
+                dict[@"extra"] = voiceMsg.extra;
+            }
+            [array addObject:dict];
+        }
+        NSLog(@"MessagesList === %@",array);
+        resolve(array);
+        
+    }
+    else{
+        reject(@"读取失败", @"读取失败", nil);
+    }
+    resolve([NSString stringWithFormat:@"%d",count]);
+}
+
+/*!
+ 获取某个会话内的未读消息数
+ 
+ @param conversationType    会话类型
+ @param targetId            会话目标ID
+ @return                    该会话内的未读消息数
+ */
+RCT_EXPORT_METHOD(getUnreadCount:(int)type
+                  targetId:(NSString *)targetId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject
+                  ){
+    int count =  [[self getClient] getUnreadCount:type targetId:targetId];
+    resolve([NSString stringWithFormat:@"%d",count]);
+}
+
+/*!
+ 获取某个类型的会话中所有的未读消息数
+ 
+ @param conversationTypes   会话类型的数组
+ @return                    该类型的会话中所有的未读消息数
+ */
+RCT_EXPORT_METHOD(getUnreadCountAllTypes:(NSArray *)types
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject
+                  ){
+    int count =  [[self getClient] getUnreadCount:types];
+    resolve([NSString stringWithFormat:@"%d",count]);
+}
+
+
 RCT_EXPORT_METHOD(sendImageMessage:(int)type
                   targetId:(NSString *)targetId
+                  targetName:(NSString *)targetName
                   content:(NSString *)imageUrl
                   pushContent:(NSString *) pushContent
                   resolve:(RCTPromiseResolveBlock)resolve
@@ -328,6 +785,7 @@ RCT_EXPORT_METHOD(sendImageMessage:(int)type
     
     if([imageUrl rangeOfString:@"assets-library"].location == NSNotFound){
         RCImageMessage *imageMessage = [RCImageMessage messageWithImageURI:imageUrl];
+        imageMessage.extra=targetName;
         [self sendMessage:type messageType:@"image" targetId:targetId content:imageMessage pushContent:pushContent resolve:resolve reject:reject];
     }
     else{
@@ -335,7 +793,13 @@ RCT_EXPORT_METHOD(sendImageMessage:(int)type
     }
 }
 
-- (void)sendImageMessageWithType:(int)type targetId:(NSString *)targetId ImageUrl:(NSString *)imageUrl  pushContent:(NSString *)pushContent resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject{
+- (void)sendImageMessageWithType:(int)type
+                        targetId:(NSString *)targetId
+                      targetName:(NSString *)targetName
+                      ImageUrl:(NSString *)imageUrl
+                     pushContent:(NSString *)pushContent
+                         resolve:(RCTPromiseResolveBlock)resolve
+                          reject:(RCTPromiseRejectBlock)reject{
     
     ALAssetsLibrary   *lib = [[ALAssetsLibrary alloc] init];
     
@@ -349,7 +813,7 @@ RCT_EXPORT_METHOD(sendImageMessage:(int)type
         UIImage * scaledImage = [self scaleImageWithImage:image toSize:CGSizeMake(960, 960)]; // 融云推荐使用的大图尺寸为：960 x 960 像素
         
         RCImageMessage *imageMessage = [RCImageMessage messageWithImage:scaledImage];
-        
+        imageMessage.extra=targetName;
         [self sendMessage:type messageType:@"image" targetId:targetId content:imageMessage pushContent:pushContent resolve:resolve reject:reject];
         
     } failureBlock:^(NSError *error) {
