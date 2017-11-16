@@ -67,8 +67,8 @@ export default {
     getUnreadCount(conversationType, targetId){//获取未读消息数
         return RongCloudIMLib.getUnreadCount(conversationType, targetId);
     },
-    getUnreadCount(types){
-        return RongCloudIMLib.getUnreadCount(types);
+    getUnreadCountAllTypes(types){
+        return RongCloudIMLib.getUnreadCountAllTypes(types);
     },
     createDiscussion(name, userIdList){//创建讨论组 name群名
         return RongCloudIMLib.createDiscussion(name, userIdList);
