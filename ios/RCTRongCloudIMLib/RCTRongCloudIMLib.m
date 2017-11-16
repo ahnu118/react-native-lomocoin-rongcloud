@@ -144,7 +144,7 @@ RCT_EXPORT_METHOD(clearMessages:(int)type
                   targetId:(NSString *)targetId
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
-   BOOL flag =  [[self getClient] clearMessages:type targetId:targetId];
+    BOOL flag =  [[self getClient] clearMessages:type targetId:targetId];
     if(flag){
         resolve(@"删除成功");
     }else{
@@ -186,8 +186,19 @@ RCT_EXPORT_METHOD(removeConversation:(int)type
  */
 RCT_EXPORT_METHOD(sendReadReceiptMessage:(int)type
                   targetId:(NSString *)targetId
-                   time:(long long)timestamp) {
-    [[self getClient] sendReadReceiptMessage:type targetId:targetId time:timestamp];
+                  time:(long long)timestamp
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    void (^successBlock)();
+    successBlock = ^() {
+        resolve(@"成功");
+    };
+    
+    void (^errorBlock)(RCErrorCode status);
+    errorBlock = ^(RCErrorCode status) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] sendReadReceiptMessage:type targetId:(NSString *)targetId time:timestamp success:successBlock error:errorBlock];
 }
 
 /*!
@@ -200,7 +211,7 @@ RCT_EXPORT_METHOD(sendReadReceiptMessage:(int)type
  */
 RCT_EXPORT_METHOD(setConversationToTop:(int)type
                   targetId:(NSString *)targetId
-                   isTop:(BOOL)isTop
+                  isTop:(BOOL)isTop
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
     BOOL flag = [[self getClient] setConversationToTop:type targetId:targetId isTop:isTop];
@@ -789,14 +800,14 @@ RCT_EXPORT_METHOD(sendImageMessage:(int)type
         [self sendMessage:type messageType:@"image" targetId:targetId content:imageMessage pushContent:pushContent resolve:resolve reject:reject];
     }
     else{
-        [self sendImageMessageWithType:type targetId:targetId ImageUrl:imageUrl pushContent:pushContent resolve:resolve reject:reject];
+        [self sendImageMessageWithType:type targetId:targetId targetName:targetName ImageUrl:imageUrl pushContent:pushContent resolve:resolve reject:reject];
     }
 }
 
 - (void)sendImageMessageWithType:(int)type
                         targetId:(NSString *)targetId
                       targetName:(NSString *)targetName
-                      ImageUrl:(NSString *)imageUrl
+                        ImageUrl:(NSString *)imageUrl
                      pushContent:(NSString *)pushContent
                          resolve:(RCTPromiseResolveBlock)resolve
                           reject:(RCTPromiseRejectBlock)reject{
