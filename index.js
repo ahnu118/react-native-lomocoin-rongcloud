@@ -57,13 +57,13 @@ export default {
     ConversationType: ConversationType,
     onConnectionStatus(callback){
         _onRongCloudConnectionStatus = callback;
-    }
+    },
     onReceived(callback) {
         _onRongCloudMessageReceived = callback;
     },
     getConnectionStatus(){
         return RongCloudIMLib.getConnectionStatus('');
-    }
+    },
     initWithAppKey(appKey) {
         return RongCloudIMLib.initWithAppKey(appKey);
     },
