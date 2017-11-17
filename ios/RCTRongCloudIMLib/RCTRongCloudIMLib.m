@@ -37,7 +37,7 @@ RCT_EXPORT_MODULE(RongCloudIMLibModule)
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"onRongMessageReceived"];
+    return @[@"onRongMessageReceived", @"onRongConnectionStatus"];
 }
 
 #pragma mark RongCloud Init
