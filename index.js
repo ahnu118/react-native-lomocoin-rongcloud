@@ -12,8 +12,16 @@ var _onRongCloudMessageReceived = function (resp) {
     console.log("融云接受消息:" + JSON.stringify(resp));
 }
 
+var _onRongCloudConnectionStatus = function(resp) {
+    console.log('连接状态:'+resp)
+}
+
 DeviceEventEmitter.addListener('onRongMessageReceived', (resp) => {
     typeof (_onRongCloudMessageReceived) === 'function' && _onRongCloudMessageReceived(resp);
+});
+
+DeviceEventEmitter.addListener('onRongConnectionStatus', (resp) => {
+    typeof (_onRongCloudConnectionStatus) === 'function' && _onRongCloudConnectionStatus(resp);
 });
 
 const RongCloudIMLibEmitter = new NativeEventEmitter(RongCloudIMLib);
@@ -22,6 +30,13 @@ const subscription = RongCloudIMLibEmitter.addListener(
     'onRongMessageReceived',
     (resp) => {
         typeof (_onRongCloudMessageReceived) === 'function' && _onRongCloudMessageReceived(resp);
+    }
+);
+
+const connectionSubscription = RongCloudIMLibEmitter.addListener(
+    'onRongConnectionStatus',
+    (resp) => {
+        typeof (_onRongCloudConnectionStatus) === 'function' && _onRongCloudConnectionStatus(resp);
     }
 );
 
@@ -40,9 +55,15 @@ const ConversationType = {
 
 export default {
     ConversationType: ConversationType,
+    onConnectionStatus(callback){
+        _onRongCloudConnectionStatus = callback;
+    }
     onReceived(callback) {
         _onRongCloudMessageReceived = callback;
     },
+    getConnectionStatus(){
+        return RongCloudIMLib.getConnectionStatus('');
+    }
     initWithAppKey(appKey) {
         return RongCloudIMLib.initWithAppKey(appKey);
     },

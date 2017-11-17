@@ -1262,6 +1262,34 @@ RCT_EXPORT_METHOD(disconnect:(BOOL)isReceivePush) {
     [self sendEventWithName:@"onRongMessageReceived" body:body];
 }
 
+//监听连接状态
+-(void)onConnectionStatusChanged:(RCConnectionStatus)status{
+    NSMutableDictionary *body = [self getEmptyBody];
+    body[@"status"] = [NSString stringWithFormat:@"%ld",status];
+    [self sendEventWithName:@"onRongConnectionStatus" body:body];
+}
+
+// RCIMClient Class
+
+/*!
+ 获取当前SDK的连接状态
+ @return 当前SDK的连接状态
+ */
+
+RCT_EXPORT_METHOD(getConnectionStatus:(int)type
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecte:(RCTPromiseRejectBlock)reject) {
+    RCConnectionStatus status = [[self getClient] getConnectionStatus];
+    resolve([NSString stringWithFormat:@"%ld",status]);
+}
+
+//监听键盘输入
+- (void)onTypingStatusChanged:(RCConversationType)conversationType
+                     targetId:(NSString *)targetId
+                       status:(NSArray *)userTypingStatusList{
+    
+}
+
 -(NSMutableDictionary *)getEmptyBody {
     NSMutableDictionary *body = @{}.mutableCopy;
     return body;
