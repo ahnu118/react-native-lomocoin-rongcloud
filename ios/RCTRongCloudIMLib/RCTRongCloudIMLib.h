@@ -13,6 +13,6 @@
 #import <RongIMLib/RCIMClient.h>
 
 
-@interface RCTRongCloudIMLib: RCTEventEmitter <RCTBridgeModule, RCIMClientReceiveMessageDelegate, , RCConnectionStatusChangeDelegate, RCTypingStatusDelegate>
+@interface RCTRongCloudIMLib: RCTEventEmitter <RCTBridgeModule, RCIMClientReceiveMessageDelegate, RCConnectionStatusChangeDelegate, RCTypingStatusDelegate>
 
 @end
