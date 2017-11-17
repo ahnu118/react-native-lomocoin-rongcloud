@@ -1276,7 +1276,7 @@ RCT_EXPORT_METHOD(disconnect:(BOOL)isReceivePush) {
  @return 当前SDK的连接状态
  */
 
-RCT_EXPORT_METHOD(getConnectionStatus:(int)type
+RCT_EXPORT_METHOD(getConnectionStatus:(NSString *)type
                   resolve:(RCTPromiseResolveBlock)resolve
                   rejecte:(RCTPromiseRejectBlock)reject) {
     RCConnectionStatus status = [[self getClient] getConnectionStatus];
