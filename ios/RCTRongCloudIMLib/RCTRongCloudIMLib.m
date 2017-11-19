@@ -259,6 +259,14 @@ RCT_EXPORT_METHOD(getConversation:(int)conversationType
         RCVoiceMessage *textMsg = (RCVoiceMessage *)conversation.lastestMessage;
         dict[@"msgType"] = @"voice";
         dict[@"extra"] = textMsg.extra;
+    }else if ([conversation.lastestMessage isKindOfClass:[RCRichContentMessage class]]) {
+        RCRichContentMessage *textMsg = (RCRichContentMessage *)conversation.lastestMessage;
+        dict[@"msgType"] = @"imageText";
+        dict[@"extra"] = textMsg.extra;
+    }else if ([conversation.lastestMessage isKindOfClass:[RCFileMessage class]]) {
+        RCFileMessage *fileMsg = (RCFileMessage *)conversation.lastestMessage;
+        dict[@"msgType"] = @"file";
+        dict[@"extra"] = fileMsg.extra;
     }
     resolve(dict);
 }
@@ -521,6 +529,15 @@ RCT_REMAP_METHOD(getConversationList,
                 RCVoiceMessage *textMsg = (RCVoiceMessage *)conversation.lastestMessage;
                 dict[@"msgType"] = @"voice";
                 dict[@"extra"] = textMsg.extra;
+            }else if ([conversation.lastestMessage isKindOfClass:[RCRichContentMessage class]]) {
+                RCRichContentMessage *textMsg = (RCRichContentMessage *)conversation.lastestMessage;
+                dict[@"msgType"] = @"imageText";
+                dict[@"extra"] = textMsg.extra;
+            }
+            else if ([conversation.lastestMessage isKindOfClass:[RCFileMessage class]]) {
+                RCFileMessage *fileMsg = (RCFileMessage *)conversation.lastestMessage;
+                dict[@"msgType"] = @"file";
+                dict[@"extra"] = fileMsg.extra;
             }
             
             [array addObject:dict];
@@ -582,9 +599,20 @@ RCT_REMAP_METHOD(getLatestMessages,
                 dict[@"extra"] = imageMsg.extra;
             } else if ([message.content isKindOfClass:[RCRichContentMessage class]]) {
                 RCRichContentMessage *imageMsg = (RCRichContentMessage *)message.content;
-                dict[@"msgType"] = @"imageText";
+                dict[@"type"] = @"imageText";
                 dict[@"imageUrl"] = imageMsg.imageURL;
                 dict[@"extra"] = imageMsg.extra;
+            }
+            else if ([message.content isKindOfClass:[RCFileMessage class]]) {
+                RCFileMessage *fileMsg = (RCFileMessage *)message.content;
+                dict[@"type"] = @"file";
+                dict[@"fileUrl"] = fileMsg.fileUrl;
+                NSNumber *longNumber = [NSNumber numberWithLong:fileMsg.size];
+                NSString *longStr = [longNumber stringValue];
+                dict[@"size"] = longStr;
+                dict[@"name"] = fileMsg.name;
+                dict[@"localPath"] = fileMsg.localPath;
+                dict[@"extra"] = fileMsg.extra;
             }
             else if ([message.content isKindOfClass:[RCVoiceMessage class]]){
                 RCVoiceMessage *voiceMsg = (RCVoiceMessage *)message.content;
@@ -655,6 +683,8 @@ RCT_REMAP_METHOD(searchConversations,
                 dict[@"lastestMessage"] = textMsg.content;
             } else if ([result.conversation.lastestMessage isKindOfClass:[RCImageMessage class]]) {
                 dict[@"msgType"] = @"image";
+            } else if ([result.conversation.lastestMessage isKindOfClass:[RCFileMessage class]]) {
+                dict[@"msgType"] = @"file";
             }  else if ([result.conversation.lastestMessage isKindOfClass:[RCRichContentMessage class]]) {
                 dict[@"msgType"] = @"imageText";
             }else if ([result.conversation.lastestMessage isKindOfClass:[RCVoiceMessage class]]) {
@@ -749,6 +779,21 @@ RCT_EXPORT_METHOD(getHistoryMessages:(int)conversationType
                 dict[@"wavAudioData"] = [self saveWavAudioDataToSandbox:voiceMsg.wavAudioData messageId:message.messageId];
                 dict[@"duration"] = @(voiceMsg.duration);
                 dict[@"extra"] = voiceMsg.extra;
+            }else if ([message.content isKindOfClass:[RCRichContentMessage class]]){
+                RCRichContentMessage *richMessage = (RCRichContentMessage *)message.content;
+                dict[@"type"] = @"imageText";
+                dict[@"imageUrl"] = richMessage.imageURL;
+                dict[@"extra"] = richMessage.extra;
+            }else if ([message.content isKindOfClass:[RCFileMessage class]]) {
+                RCFileMessage *fileMsg = (RCFileMessage *)message.content;
+                dict[@"type"] = @"file";
+                dict[@"fileUrl"] = fileMsg.fileUrl;
+                NSNumber *longNumber = [NSNumber numberWithLong:fileMsg.size];
+                NSString *longStr = [longNumber stringValue];
+                dict[@"size"] = longStr;
+                dict[@"name"] = fileMsg.name;
+                dict[@"localPath"] = fileMsg.localPath;
+                dict[@"extra"] = fileMsg.extra;
             }
             [array addObject:dict];
         }
@@ -1259,6 +1304,21 @@ RCT_EXPORT_METHOD(disconnect:(BOOL)isReceivePush) {
         _message[@"wavAudioData"] = voiceMessage.wavAudioData;
         _message[@"duration"] = @(voiceMessage.duration);
         _message[@"extra"] = voiceMessage.extra;
+    }else if ([message.content isKindOfClass:[RCRichContentMessage class]]){
+        RCRichContentMessage *richMessage = (RCRichContentMessage *)message.content;
+        _message[@"type"] = @"imageText";
+        _message[@"imageUrl"] = richMessage.imageURL;
+        _message[@"extra"] = richMessage.extra;
+    }else if ([message.content isKindOfClass:[RCFileMessage class]]) {
+        RCFileMessage *fileMsg = (RCFileMessage *)message.content;
+        _message[@"type"] = @"file";
+        _message[@"fileUrl"] = fileMsg.fileUrl;
+        NSNumber *longNumber = [NSNumber numberWithLong:fileMsg.size];
+        NSString *longStr = [longNumber stringValue];
+        _message[@"size"] = longStr;
+        _message[@"name"] = fileMsg.name;
+        _message[@"localPath"] = fileMsg.localPath;
+        _message[@"extra"] = fileMsg.extra;
     }
     
     
