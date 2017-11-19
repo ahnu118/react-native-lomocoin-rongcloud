@@ -104,7 +104,7 @@ export default {
         return RongCloudIMLib.quitDiscussion(discussionId);
     },
     getDiscussion(discussionId){//获取讨论组的信息
-        return RongCloudIMLib.quitDiscussion(discussionId);
+        return RongCloudIMLib.getDiscussion(discussionId);
     },
     setDiscussionName(discussionId, discussionName){//设置讨论组名称
         return RongCloudIMLib.setDiscussionName(discussionId, discussionName);
