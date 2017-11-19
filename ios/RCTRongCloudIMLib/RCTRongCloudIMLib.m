@@ -121,6 +121,9 @@ RCT_EXPORT_METHOD(clearUnreadMessage:(int)type
         case 1:
             conversationType = ConversationType_PRIVATE;
             break;
+        case 2:
+            conversationType = ConversationType_DISCUSSION;
+            break;
         case 3:
             conversationType = ConversationType_GROUP;
             break;
@@ -501,7 +504,7 @@ RCT_REMAP_METHOD(getConversationList,
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject) {
     
-    NSArray *conversationList = [[self getClient] getConversationList:@[@(ConversationType_PRIVATE),@(ConversationType_GROUP)]];
+    NSArray *conversationList = [[self getClient] getConversationList:@[@(ConversationType_PRIVATE),@(ConversationType_GROUP),@(ConversationType_DISCUSSION)]];
     if(conversationList.count > 0){
         NSMutableArray * array = [NSMutableArray new];
         for  (RCConversation * conversation in conversationList) {
@@ -564,6 +567,9 @@ RCT_REMAP_METHOD(getLatestMessages,
     switch (type) {
         case 1:
             conversationType = ConversationType_PRIVATE;
+            break;
+        case 2:
+            conversationType = ConversationType_DISCUSSION;
             break;
         case 3:
             conversationType = ConversationType_GROUP;
@@ -661,8 +667,8 @@ RCT_REMAP_METHOD(searchConversations,
                  keyword:(NSString *)keyword
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject) {
-    
-    NSArray *SearchResult = [[self getClient] searchConversations:@[@(ConversationType_PRIVATE),@(ConversationType_GROUP)] messageType:@[[RCTextMessage getObjectName]] keyword:keyword];
+
+    NSArray *SearchResult = [[self getClient] searchConversations:@[@(ConversationType_PRIVATE),@(ConversationType_GROUP),@(ConversationType_DISCUSSION)] messageType:@[[RCTextMessage getObjectName]] keyword:keyword];
     
     
     if(SearchResult.count > 0){
@@ -1238,6 +1244,9 @@ RCT_EXPORT_METHOD(disconnect:(BOOL)isReceivePush) {
     switch (type) {
         case 1:
             conversationType = ConversationType_PRIVATE;
+            break;
+        case 2:
+            conversationType = ConversationType_DISCUSSION;
             break;
         case 3:
             conversationType = ConversationType_GROUP;
