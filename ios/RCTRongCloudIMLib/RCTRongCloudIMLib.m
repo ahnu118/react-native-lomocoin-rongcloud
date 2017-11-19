@@ -255,6 +255,10 @@ RCT_EXPORT_METHOD(getConversation:(int)conversationType
         RCImageMessage *textMsg = (RCImageMessage *)conversation.lastestMessage;
         dict[@"msgType"] = @"image";
         dict[@"extra"] = textMsg.extra;
+    } else if ([conversation.lastestMessage isKindOfClass:[RCRichContentMessage class]]) {
+        RCRichContentMessage *textMsg = (RCRichContentMessage *)conversation.lastestMessage;
+        dict[@"msgType"] = @"imageText";
+        dict[@"extra"] = textMsg.extra;
     } else if ([conversation.lastestMessage isKindOfClass:[RCVoiceMessage class]]) {
         RCVoiceMessage *textMsg = (RCVoiceMessage *)conversation.lastestMessage;
         dict[@"msgType"] = @"voice";
@@ -513,6 +517,13 @@ RCT_REMAP_METHOD(getConversationList,
                 dict[@"msgType"] = @"text";
                 dict[@"lastestMessage"] = textMsg.content;
                 dict[@"extra"] = textMsg.extra;
+            }else if([conversation.lastestMessage isMemberOfClass:[RCRichContentMessage class]]) {
+                RCRichContentMessage *imageMessage = (RCRichContentMessage *)conversation.lastestMessage;
+                dict[@"type"] = @"imageText";
+                dict[@"imageUrl"] = imageMessage.imageURL;
+                dict[@"url"] = imageMessage.url;
+                dict[@"extra"] = imageMessage.extra;
+                dict[@"content"] = imageMessage.digest;
             } else if ([conversation.lastestMessage isKindOfClass:[RCImageMessage class]]) {
                 RCImageMessage *textMsg = (RCImageMessage *)conversation.lastestMessage;
                 dict[@"msgType"] = @"image";
@@ -574,6 +585,14 @@ RCT_REMAP_METHOD(getLatestMessages,
                 dict[@"type"] = @"text";
                 dict[@"content"] = textMsg.content;
                 dict[@"extra"] = textMsg.extra;
+            }
+            else if([message.content isMemberOfClass:[RCRichContentMessage class]]) {
+                RCRichContentMessage *imageMessage = (RCRichContentMessage *)message.content;
+                dict[@"type"] = @"imageText";
+                dict[@"imageUrl"] = imageMessage.imageURL;
+                dict[@"url"] = imageMessage.url;
+                dict[@"extra"] = imageMessage.extra;
+                dict[@"content"] = imageMessage.digest;
             }
             else if ([message.content isKindOfClass:[RCImageMessage class]]){
                 RCImageMessage *imageMsg = (RCImageMessage *)message.content;
@@ -648,6 +667,8 @@ RCT_REMAP_METHOD(searchConversations,
                 RCTextMessage *textMsg = (RCTextMessage *)result.conversation.lastestMessage;
                 dict[@"msgType"] = @"text";
                 dict[@"lastestMessage"] = textMsg.content;
+            }else if([result.conversation.lastestMessage isMemberOfClass:[RCRichContentMessage class]]) {
+                dict[@"type"] = @"imageText";
             } else if ([result.conversation.lastestMessage isKindOfClass:[RCImageMessage class]]) {
                 dict[@"msgType"] = @"image";
             } else if ([result.conversation.lastestMessage isKindOfClass:[RCVoiceMessage class]]) {
@@ -730,6 +751,14 @@ RCT_EXPORT_METHOD(getHistoryMessages:(int)conversationType
                 dict[@"content"] = textMsg.content;
                 dict[@"extra"] = textMsg.extra;
             }
+            else if([message.content isMemberOfClass:[RCRichContentMessage class]]) {
+                RCRichContentMessage *imageMessage = (RCRichContentMessage *)message.content;
+                dict[@"type"] = @"imageText";
+                dict[@"imageUrl"] = imageMessage.imageURL;
+                dict[@"url"] = imageMessage.url;
+                dict[@"extra"] = imageMessage.extra;
+                dict[@"content"] = imageMessage.digest;
+            }
             else if ([message.content isKindOfClass:[RCImageMessage class]]){
                 RCImageMessage *imageMsg = (RCImageMessage *)message.content;
                 dict[@"type"] = @"image";
@@ -802,6 +831,28 @@ RCT_EXPORT_METHOD(sendImageMessage:(int)type
     else{
         [self sendImageMessageWithType:type targetId:targetId targetName:targetName ImageUrl:imageUrl pushContent:pushContent resolve:resolve reject:reject];
     }
+}
+
+RCT_EXPORT_METHOD(sendFileMessage:(int)type
+                  targetId:(NSString *)targetId
+                  targetName:(NSString *)targetName
+                  content:(NSString *)fileUrl
+                  pushContent:(NSString *) pushContent
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    RCFileMessage *fileMessage = [RCFileMessage messageWithFile:fileUrl];
+    void (^successBlock)(long messageId);
+    successBlock = ^(long messageId) {
+        NSString* messageid = [NSString stringWithFormat:@"%ld",messageId];
+        resolve(messageid);
+    };
+    
+    void (^errorBlock)(RCErrorCode nErrorCode , long messageId);
+    errorBlock = ^(RCErrorCode nErrorCode , long messageId) {
+        reject(@"发送失败", @"发送失败", nil);
+    };
+    [[self getClient] sendMediaMessage:type targetId:targetId content:fileMessage pushContent:pushContent pushData:nil progress:nil success:successBlock error:errorBlock cancel:nil];
 }
 
 - (void)sendImageMessageWithType:(int)type
@@ -1238,6 +1289,14 @@ RCT_EXPORT_METHOD(disconnect:(BOOL)isReceivePush) {
         _message[@"type"] = @"text";
         _message[@"content"] = textMessage.content;
         _message[@"extra"] = textMessage.extra;
+    }
+    else if([message.content isMemberOfClass:[RCRichContentMessage class]]) {
+        RCRichContentMessage *imageMessage = (RCRichContentMessage *)message.content;
+        _message[@"type"] = @"imageText";
+        _message[@"imageUrl"] = imageMessage.imageURL;
+        _message[@"url"] = imageMessage.url;
+        _message[@"extra"] = imageMessage.extra;
+        _message[@"content"] = imageMessage.digest;
     }
     else if([message.content isMemberOfClass:[RCImageMessage class]]) {
         RCImageMessage *imageMessage = (RCImageMessage *)message.content;

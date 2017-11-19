@@ -133,6 +133,9 @@ export default {
     sendImageMessage(conversationType, targetId, targetName, imageUrl) {
         return RongCloudIMLib.sendImageMessage(conversationType, targetId, targetName, imageUrl, '');
     },
+    sendFileMessage(conversationType, targetId, targetName, fileUrl) {
+        return RongCloudIMLib.sendFileMessage(conversationType, targetId, targetName, fileUrl, '');
+    },
     voiceBtnPressIn(conversationType, targetId) {
         return RongCloudIMLib.voiceBtnPressIn(conversationType, targetId);
     },
