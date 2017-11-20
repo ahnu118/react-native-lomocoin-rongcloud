@@ -45,7 +45,6 @@ RCT_EXPORT_MODULE(RongCloudIMLibModule)
 RCT_EXPORT_METHOD(initWithAppKey:(NSString *)appkey) {
     NSLog(@"initWithAppKey %@", appkey);
     [[self getClient] initWithAppKey:appkey];
-    
     [[self getClient] setReceiveMessageDelegate:self object:nil];
 }
 
