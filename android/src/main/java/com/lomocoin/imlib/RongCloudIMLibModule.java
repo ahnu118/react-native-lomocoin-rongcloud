@@ -140,31 +140,31 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
                 UiThreadUtil.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                      try {
-                           Activity activity = getCurrentActivity();
-                           if(isBackground(activity)){
-                               Uri.Builder builder = Uri.parse("rong://" + activity.getPackageName()).buildUpon();
+                        try {
+                            Activity activity = getCurrentActivity();
+                            if(isBackground(activity)){
+                                Uri.Builder builder = Uri.parse("rong://" + activity.getPackageName()).buildUpon();
 
-                               builder.appendPath("conversation").appendPath("lomostart")
-                                       .appendQueryParameter("targetId", message.getTargetId())
-                                       .appendQueryParameter("title", "");
-                               Uri uri = builder.build();
+                                builder.appendPath("conversation").appendPath("lomostart")
+                                        .appendQueryParameter("targetId", message.getTargetId())
+                                        .appendQueryParameter("title", "");
+                                Uri uri = builder.build();
 
-                               Intent intent = context.getPackageManager().getLaunchIntentForPackage(activity.getPackageName());
-                               intent.setData(uri);
+                                Intent intent = context.getPackageManager().getLaunchIntentForPackage(activity.getPackageName());
+                                intent.setData(uri);
 
-                               String title = "lomostart";
-                               String tickerText = context.getResources().getString(context.getResources().getIdentifier("rc_notification_ticker_text", "string", context.getPackageName()));
-                               PendingIntent intent1 =  PendingIntent.getActivity(context, 300, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                               Notification notification = NotificationUtil.createNotification(activity,title,intent1,tickerText);
-                               NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-                               if(notification != null) {
-                                   nm.notify(2000, notification);
-                               }
-                           }
-                      }catch (Exception e){
-                          Log.e("isme","考虑是否需要发送推送到通知栏 error");
-                      }
+                                String title = "lomostart";
+                                String tickerText = context.getResources().getString(context.getResources().getIdentifier("rc_notification_ticker_text", "string", context.getPackageName()));
+                                PendingIntent intent1 =  PendingIntent.getActivity(context, 300, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                Notification notification = NotificationUtil.createNotification(activity,title,intent1,tickerText);
+                                NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                if(notification != null) {
+                                    nm.notify(2000, notification);
+                                }
+                            }
+                        }catch (Exception e){
+                            Log.e("isme","考虑是否需要发送推送到通知栏 error");
+                        }
                     }
                 });
 
@@ -239,6 +239,23 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
                 promise.reject(errorCode.getValue() + "", errorCode.getMessage());
             }
         });
+    }
+
+    @ReactMethod
+    public void clearUnreadMessage(int mType, String targetId, final Promise promise){
+        ConversationType type = formatConversationType(mType);
+        RongIMClient.getInstance().clearMessagesUnreadStatus(type,targetId,new ResultCallback<Boolean>(){
+
+            @Override
+            public void onSuccess(Boolean aBoolean) {
+                promise.resolve(aBoolean);
+            }
+
+            @Override
+            public void onError(RongIMClient.ErrorCode errorCode) {
+                promise.reject(errorCode.getValue() + "", errorCode.getMessage());
+            }
+        } );
     }
 
     @ReactMethod
