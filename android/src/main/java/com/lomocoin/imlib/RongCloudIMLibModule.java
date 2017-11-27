@@ -224,6 +224,37 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
         return false;
     }
 
+    @ReactMethod
+        public void getUnreadCountAllTypes(int mType,final Promise promise){
+            ConversationType[] type = {formatConversationType(1), formatConversationType(2)};
+            RongIMClient.getInstance().getUnreadCount(type,new ResultCallback<Integer>() {
+
+                @Override
+                public void onSuccess(Integer integer) {
+                    promise.resolve(integer+"");
+                }
+                @Override
+                public void onError(RongIMClient.ErrorCode errorCode) {
+                    promise.reject(errorCode.getValue() + "", errorCode.getMessage());
+                }
+            });
+        }
+
+    @ReactMethod
+    public void getUnreadCountAllTypes(ReadableArray mType, final Promise promise){
+        ConversationType[] type = {formatConversationType(1), formatConversationType(2)};
+        RongIMClient.getInstance().getUnreadCount(type,new ResultCallback<Integer>() {
+
+            @Override
+            public void onSuccess(Integer integer) {
+                promise.resolve(integer+"");
+            }
+            @Override
+            public void onError(RongIMClient.ErrorCode errorCode) {
+                promise.reject(errorCode.getValue() + "", errorCode.getMessage());
+            }
+        });
+    }
 
     @ReactMethod
     public void getLatestMessages(int mType, String targetId, int count, final Promise promise) {
@@ -346,7 +377,7 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void sendTextMessage(int mType, String targetId, String content, String pushContent, final Promise promise) {
+    public void sendTextMessage(int mType, String targetId, String targetName, String content, String pushContent, final Promise promise) {
         TextMessage textMessage = TextMessage.obtain(content);
         ConversationType type = formatConversationType(mType);
         String pushData = "";
@@ -369,7 +400,7 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void sendImageMessage(int mType, String targetId, String imageUrl, String pushContent, final Promise promise) {
+    public void sendImageMessage(int mType, String targetId, String targetName, String imageUrl, String pushContent, final Promise promise) {
 
         imageUrl = ImgCompressUtils.compress(context,imageUrl);//压缩图片处理
 //        imageUrl = "file://"+BitmapUtils.getRealFilePath(context, Uri.parse(imageUrl));
@@ -450,13 +481,6 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
         }catch (Exception e){
             promise.reject("error","error");
         }
-    }
-
-    @ReactMethod
-    public void clearUnreadMessage(int mType, String targetId, Promise promise) {
-        ConversationType type = formatConversationType(mType);
-        boolean is = RongIMClient.getInstance().clearMessagesUnreadStatus(type, targetId);
-        promise.resolve(is);
     }
 
 
@@ -577,6 +601,8 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
         switch (type) {
             case 1:
                 return ConversationType.PRIVATE;
+            case 2:
+                return ConversationType.DISCUSSION;
             case 3:
                 return ConversationType.GROUP;
             default:
