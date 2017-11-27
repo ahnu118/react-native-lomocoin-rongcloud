@@ -226,22 +226,6 @@ public class RongCloudIMLibModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-        public void getUnreadCountAllTypes(int mType,final Promise promise){
-            ConversationType[] type = {formatConversationType(1), formatConversationType(2)};
-            RongIMClient.getInstance().getUnreadCount(type,new ResultCallback<Integer>() {
-
-                @Override
-                public void onSuccess(Integer integer) {
-                    promise.resolve(integer+"");
-                }
-                @Override
-                public void onError(RongIMClient.ErrorCode errorCode) {
-                    promise.reject(errorCode.getValue() + "", errorCode.getMessage());
-                }
-            });
-        }
-
-    @ReactMethod
     public void getUnreadCountAllTypes(ReadableArray mType, final Promise promise){
         ConversationType[] type = {formatConversationType(1), formatConversationType(2)};
         RongIMClient.getInstance().getUnreadCount(type,new ResultCallback<Integer>() {
